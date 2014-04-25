@@ -38,14 +38,7 @@ class app():
 		noteTabs.grid(column=0, row=0, sticky="N, S, E, W")
 		
 		
-		frameLaunchers = ttk.Frame(self.root)
-		label_launch = ttk.Label(frameLaunchers, text='Start:')
-		label_launch.grid(column=0, row=0,pady=5)
-		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: print("SMAC!"))
-		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: print("SMACX!"))
-		button_SMAC.grid(column=1, row=0,padx=10)
-		button_SMACX.grid(column=2, row=0)
-		frameLaunchers.grid(column=0, row=1, sticky="S, E")
+		
 		
 		label_in_mods = ttk.Label(frameMods, text='Inactive mods:')
 		label_in_mods.grid(column=0, row=0)
@@ -84,15 +77,18 @@ class app():
 		label_terranx= ttk.Label(frameOptions, text='terranx.exe:')
 		label_folder = ttk.Label(frameOptions, text='Alpha Centarui Folder:')
 		str_terran = tk.StringVar()
+		
 		entry_terran = ttk.Entry(frameOptions, textvariable=str_terran)
-		button_get_smac = ttk.Button(frameOptions, text='Find', command=lambda: print("Find SMAC!"))
+		button_get_smac = ttk.Button(frameOptions, text='Find', command=lambda: str_terran.set(filedialog.askopenfilename()) )
 		
 		str_terranx = tk.StringVar()
 		entry_terranx = ttk.Entry(frameOptions, textvariable=str_terranx)
-		button_get_smacx = ttk.Button(frameOptions, text='Find', command=lambda: print("Find SMACx!"))
+		button_get_smacx = ttk.Button(frameOptions, text='Find', command=lambda: str_terranx.set(filedialog.askopenfilename()))
 		
-		label_folder_location = ttk.Label(frameOptions, text='Unknown')
-		button_get_folder = ttk.Button(frameOptions, text='Find', command=lambda: print("Find!"))
+		smac_folder_location = "Unknown"
+		label_folder_location = ttk.Label(frameOptions, text=smac_folder_location)
+		
+		button_get_folder = ttk.Button(frameOptions, text='Find', command=lambda: filedialog.askdirectory())
 		
 		label_terran.grid(column=0, row=1)
 		entry_terran.grid(column=1, row=1,sticky="W,E",padx=10)
@@ -103,6 +99,17 @@ class app():
 		label_folder.grid(column=0, row=3)
 		label_folder_location.grid(column=1, row=3,sticky="W,E",padx=10)
 		button_get_folder.grid(column=2, row=3)
+		
+		# Launch Game area
+		frameLaunchers = ttk.Frame(self.root)
+		label_launch = ttk.Label(frameLaunchers, text='Start:')
+		label_launch.grid(column=0, row=0,pady=5)
+		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: print("SMAC!"))
+		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: print("SMACX!"))
+		button_SMAC.grid(column=1, row=0,padx=10)
+		button_SMACX.grid(column=2, row=0)
+		frameLaunchers.grid(column=0, row=1, sticky="S, E")
+		
 		# Start the window
 		self.root.mainloop()
 
