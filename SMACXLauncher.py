@@ -24,8 +24,10 @@ WF_KEY = "working_folder"
 CONFIG = 'settings.ini'
 SET = "SETTINGS"
 
+logging.basicConfig(level=logging.DEBUG)
 class app():
 	def __init__(self):
+		logging.info("start program")
 		self.config = configparser.ConfigParser()
 		self.config[SET]={}
 
@@ -133,6 +135,8 @@ class app():
 		self.root.mainloop()
 
 	def set_directory(self, label):
+		#TODO: have it check to see if directory location is valid.
+		#TODO: if there is already a directory set, or exe location set... default to their locations.
 		self.config[SET][WF_KEY] = filedialog.askdirectory()
 		self.save_settings()
 		label.configure(text=self.config[SET][WF_KEY])
@@ -163,6 +167,6 @@ class app():
 			# TODO: put in try catch block here.
 			subprocess.Popen(gamelocation, cwd=self.config[SET][WF_KEY])
 		else:
-			print("Invalid directory location")
+			logging.warning("Invalid directory location")
 app()
 
