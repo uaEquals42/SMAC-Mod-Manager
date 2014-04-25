@@ -8,10 +8,12 @@ import logging
 from tkinter import filedialog
 import tkinter as tk
 from tkinter import ttk
+from os import path
+
 
 """
 filename = filedialog.askopenfilename()
-subprocess.call(filename, shell=True)
+subprocess.Popen(r'c:\mytool\tool.exe', cwd=r'd:\test\local')
 
 """
 
@@ -85,10 +87,10 @@ class app():
 		entry_terranx = ttk.Entry(frameOptions, textvariable=str_terranx)
 		button_get_smacx = ttk.Button(frameOptions, text='Find', command=lambda: str_terranx.set(filedialog.askopenfilename()))
 		
-		smac_folder_location = "Unknown"
-		label_folder_location = ttk.Label(frameOptions, text=smac_folder_location)
+		self.smac_folder_location = "Unknown"
+		label_folder_location = ttk.Label(frameOptions, text=self.smac_folder_location)
 		
-		button_get_folder = ttk.Button(frameOptions, text='Find', command=lambda: filedialog.askdirectory())
+		button_get_folder = ttk.Button(frameOptions, text='Find', command=lambda: self.set_directory())
 		
 		label_terran.grid(column=0, row=1)
 		entry_terran.grid(column=1, row=1,sticky="W,E",padx=10)
@@ -104,8 +106,8 @@ class app():
 		frameLaunchers = ttk.Frame(self.root)
 		label_launch = ttk.Label(frameLaunchers, text='Start:')
 		label_launch.grid(column=0, row=0,pady=5)
-		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: print("SMAC!"))
-		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: print("SMACX!"))
+		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: self.start_game(str_terran.get()))
+		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: self.start_game(str_terranx.get()))
 		button_SMAC.grid(column=1, row=0,padx=10)
 		button_SMACX.grid(column=2, row=0)
 		frameLaunchers.grid(column=0, row=1, sticky="S, E")
@@ -113,5 +115,15 @@ class app():
 		# Start the window
 		self.root.mainloop()
 
+	def set_directory(self):
+		self.smac_folder_location = filedialog.askdirectory()
+		
+	def start_game(self, gamelocation):
+		print("start the game")
+		# Check to see if folderlocation is valid.
+		print()
+		if path.isdir(self.smac_folder_location):
+			print("Is a directory!")
+			subprocess.Popen(gamelocation, cwd=self.smac_folder_location)
 app()
 
