@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from os import path
 import configparser
+import os
 
 
 """
@@ -137,9 +138,14 @@ class app():
 	def set_directory(self, label):
 		#TODO: have it check to see if directory location is valid.
 		#TODO: if there is already a directory set, or exe location set... default to their locations.
-		self.config[SET][WF_KEY] = filedialog.askdirectory()
-		self.save_settings()
-		label.configure(text=self.config[SET][WF_KEY])
+		tmp = filedialog.askdirectory(initialdir=self.config[SET].get(WF_KEY, path.expanduser("~")))
+		if tmp != "":
+			self.config[SET][WF_KEY] = tmp
+			self.save_settings()
+			label.configure(text=self.config[SET][WF_KEY])
+		
+			#TODO: Popup asking to make backup folder.  Y/N
+			self.make_backup_folder()
 	
 	def set_terran(self, key, string):
 		value = filedialog.askopenfilename()
@@ -149,6 +155,7 @@ class app():
 		
 	
 	def save_settings(self):
+		logging.info("Saving settings")
 		self.config[SET][TERRAN_KEY] = self.str_terran.get()
 		self.config[SET][TERRANX_KEY] = self.str_terranx.get()
 		
@@ -156,7 +163,28 @@ class app():
 		with open(CONFIG, 'w') as configfile:
 			self.config.write(configfile)
 	
-	
+	def make_backup_folder(self):
+		# See if backupfolder exists, if not, make it and copy all the modable filetypes.
+		logging.info("Create backup folder")
+		# Ignore .tmp, .dll /saves /Color Blind Palette for backup folder.
+		# Autoconvert color blind into a mod.
+		fileexcludes = [".tmp",".dll",".sys"]
+		folders_skip = ["saves","Color Blind Palette"]
+		
+		
+		""" 
+		# This doesn't work.
+		for root, dirs, files in os.walk(self.config[SET][WF_KEY]):
+			print( path.basename(root))
+			if path.basename(root) not in folders_skip:
+				for dir in dirs:
+					print(dir)
+					
+				for file in files:
+					if file.endswith(".txt"):
+						print(os.path.join(root, file))
+		"""
+		
 			
 	def start_game(self, gamelocation):
 		print("start the game")
