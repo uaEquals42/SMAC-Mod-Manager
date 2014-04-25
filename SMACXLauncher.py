@@ -5,12 +5,13 @@ Created on Apr 24, 2014
 '''
 import subprocess
 import logging
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import tkinter as tk
 from tkinter import ttk
 from os import path
 import configparser
 import os
+import shutil
 
 
 """
@@ -145,7 +146,12 @@ class app():
 			label.configure(text=self.config[SET][WF_KEY])
 		
 			#TODO: Popup asking to make backup folder.  Y/N
-			self.make_backup_folder()
+			answer = messagebox.askyesno(message='Copy contents of \n'+tmp+'\n to \n' + path.abspath("./backup")+"\n\n\nIt is required to have an unaltered copy of SMAC/X in the backup folder",icon='question', title='Install')
+			
+			if answer:
+				logging.info("Save to backupfolder")
+				self.make_backup_folder()
+				logging.info("Finished")
 	
 	def set_terran(self, key, string):
 		value = filedialog.askopenfilename()
@@ -163,27 +169,39 @@ class app():
 		with open(CONFIG, 'w') as configfile:
 			self.config.write(configfile)
 	
+	
+	def create_folder(self, location):
+		direct = path.dirname(location)
+		if not path.exists(direct):
+			logging.debug("Create backup folder")
+			os.makedirs(direct)
+	
 	def make_backup_folder(self):
 		# See if backupfolder exists, if not, make it and copy all the modable filetypes.
-		logging.info("Create backup folder")
+		
 		# Ignore .tmp, .dll /saves /Color Blind Palette for backup folder.
 		# Autoconvert color blind into a mod.
-		fileexcludes = [".tmp",".dll",".sys"]
-		folders_skip = ["saves","Color Blind Palette"]
+		fileexcludes = [".tmp", ".dll", ".sys"]
+		folders_skip = ["saves", "Color Blind Palette"]
 		
-		
-		""" 
-		# This doesn't work.
-		for root, dirs, files in os.walk(self.config[SET][WF_KEY]):
-			print( path.basename(root))
-			if path.basename(root) not in folders_skip:
-				for dir in dirs:
-					print(dir)
+		logging.info("Copy to backup folder")
+		for dirname, dirnames, files in os.walk(self.config[SET][WF_KEY]):
+			#ok remove folders we don't go into
+			for rem_f in folders_skip:
+				if rem_f in dirnames:
+					dirnames.remove(rem_f)
+			
+			for file in files:
+				if path.splitext(file)[1] not in fileexcludes:
+					file_path = path.join(dirname, file)
+					logging.debug(file_path)
+					destination = path.join("./backup", path.relpath(path.join(dirname, file), self.config[SET][WF_KEY]))
+					self.create_folder(destination)
+					shutil.copyfile(file_path, destination)
 					
-				for file in files:
-					if file.endswith(".txt"):
-						print(os.path.join(root, file))
-		"""
+
+		
+		
 		
 			
 	def start_game(self, gamelocation):
