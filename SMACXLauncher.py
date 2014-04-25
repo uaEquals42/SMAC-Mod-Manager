@@ -9,6 +9,7 @@ from tkinter import filedialog
 import tkinter as tk
 from tkinter import ttk
 from os import path
+import configparser
 
 
 """
@@ -17,8 +18,22 @@ subprocess.Popen(r'c:\mytool\tool.exe', cwd=r'd:\test\local')
 
 """
 
+TERRAN_KEY = "terran_Key"
+TERRANX_KEY = "terranX_Key"
+WF_KEY = "working_folder"
+CONFIG = 'settings.ini'
+SET = "SETTINGS"
+
 class app():
 	def __init__(self):
+		self.config = configparser.ConfigParser()
+		self.config[SET]={}
+
+		self.config.read(CONFIG)
+		
+	
+		
+		
 		self.root = tk.Tk()
 		self.root.title("SMAC/SMACX Mod Manager")
 		self.root.option_add('*tearOff', tk.FALSE)
@@ -78,19 +93,21 @@ class app():
 		label_terran = ttk.Label(frameOptions, text='terran.exe:')
 		label_terranx= ttk.Label(frameOptions, text='terranx.exe:')
 		label_folder = ttk.Label(frameOptions, text='Alpha Centarui Folder:')
-		str_terran = tk.StringVar()
 		
-		entry_terran = ttk.Entry(frameOptions, textvariable=str_terran)
-		button_get_smac = ttk.Button(frameOptions, text='Find', command=lambda: str_terran.set(filedialog.askopenfilename()) )
+		self.str_terran = tk.StringVar()
+		self.str_terran.set(self.config[SET].get(TERRAN_KEY, " "))
+		entry_terran = ttk.Entry(frameOptions, textvariable=self.str_terran)
+		button_get_smac = ttk.Button(frameOptions, text='Find', command=lambda: self.set_terran(TERRAN_KEY, self.str_terran) )
 		
-		str_terranx = tk.StringVar()
-		entry_terranx = ttk.Entry(frameOptions, textvariable=str_terranx)
-		button_get_smacx = ttk.Button(frameOptions, text='Find', command=lambda: str_terranx.set(filedialog.askopenfilename()))
+		self.str_terranx = tk.StringVar()
+		self.str_terranx.set(self.config[SET].get(TERRANX_KEY, " "))
+		entry_terranx = ttk.Entry(frameOptions, textvariable=self.str_terranx)
+		button_get_smacx = ttk.Button(frameOptions, text='Find', command=lambda: self.set_terran(TERRANX_KEY,self.str_terranx))
 		
-		self.smac_folder_location = "Unknown"
-		label_folder_location = ttk.Label(frameOptions, text=self.smac_folder_location)
 		
-		button_get_folder = ttk.Button(frameOptions, text='Find', command=lambda: self.set_directory())
+		label_folder_location = ttk.Label(frameOptions, text=self.config[SET].get(WF_KEY, "Unknown"))
+		
+		button_get_folder = ttk.Button(frameOptions, text='Find', command=lambda: self.set_directory(label_folder_location))
 		
 		label_terran.grid(column=0, row=1)
 		entry_terran.grid(column=1, row=1,sticky="W,E",padx=10)
@@ -106,8 +123,8 @@ class app():
 		frameLaunchers = ttk.Frame(self.root)
 		label_launch = ttk.Label(frameLaunchers, text='Start:')
 		label_launch.grid(column=0, row=0,pady=5)
-		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: self.start_game(str_terran.get()))
-		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: self.start_game(str_terranx.get()))
+		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: self.start_game(self.str_terran.get()))
+		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: self.start_game(self.str_terranx.get()))
 		button_SMAC.grid(column=1, row=0,padx=10)
 		button_SMACX.grid(column=2, row=0)
 		frameLaunchers.grid(column=0, row=1, sticky="S, E")
@@ -115,15 +132,37 @@ class app():
 		# Start the window
 		self.root.mainloop()
 
-	def set_directory(self):
-		self.smac_folder_location = filedialog.askdirectory()
+	def set_directory(self, label):
+		self.config[SET][WF_KEY] = filedialog.askdirectory()
+		self.save_settings()
+		label.configure(text=self.config[SET][WF_KEY])
+	
+	def set_terran(self, key, string):
+		value = filedialog.askopenfilename()
+		self.config[SET][key]=value
+		string.set(value)	
+		self.save_settings()
 		
+	
+	def save_settings(self):
+		self.config[SET][TERRAN_KEY] = self.str_terran.get()
+		self.config[SET][TERRANX_KEY] = self.str_terranx.get()
+		
+		
+		with open(CONFIG, 'w') as configfile:
+			self.config.write(configfile)
+	
+	
+			
 	def start_game(self, gamelocation):
 		print("start the game")
+		self.save_settings()	
 		# Check to see if folderlocation is valid.
 		print()
-		if path.isdir(self.smac_folder_location):
-			print("Is a directory!")
-			subprocess.Popen(gamelocation, cwd=self.smac_folder_location)
+		if path.isdir(self.config[SET].get(WF_KEY, "\n\n\n\n\n\n\n\n\n\n\n")):
+			# TODO: put in try catch block here.
+			subprocess.Popen(gamelocation, cwd=self.config[SET][WF_KEY])
+		else:
+			print("Invalid directory location")
 app()
 
