@@ -13,6 +13,8 @@ import configparser
 import os
 import shutil
 import time
+import sys
+import traceback
 
 
 TERRAN_KEY = "terran_Key"
@@ -124,7 +126,7 @@ class app():
 		frameLaunchers = ttk.Frame(self.root)
 		label_launch = ttk.Label(frameLaunchers, text='Start:')
 		
-		button_apply = ttk.Button(frameLaunchers, text='Force update', command=lambda: self.apply_mods(True))
+		button_apply = ttk.Button(frameLaunchers, text='Apply', command=lambda: self.apply_mods(False))
 		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: self.start_game(self.str_terran.get()))
 		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: self.start_game(self.str_terranx.get()))
 		button_apply.grid(column=0, row=0)
@@ -217,11 +219,10 @@ class app():
 		enabledmods = []
 		for i in range(0, self.tklist_active_mods.size()):
 			enabledmods.append(self.tklist_active_mods.get(i))
-		#enabledmods = self.str_var_active_mods.get().translate(test).split(",") #WARNING: WIll leave an empty set in list.
+		
 		logging.debug(enabledmods)
-		for ap_mods in enabledmods:
-			if ap_mods != '':
-				dict_files_to_copy = self.get_file_dict(path.join("./mods", ap_mods), dict_files_to_copy)
+		for ap_mods in enabledmods:	
+			dict_files_to_copy = self.get_file_dict(path.join("./mods", ap_mods), dict_files_to_copy)
 		
 	
 		# Then copy files back
@@ -260,13 +261,21 @@ class app():
 			
 	def start_game(self, gamelocation):
 		self.apply_mods(False)
-		print("start the game")
+		logging.info("start the game")
 		self.save_settings()	
 		# Check to see if folderlocation is valid.
-		print()
+		
 		if path.isdir(self.config[SET].get(WF_KEY, "\n\n\n\n\n\n\n\n\n\n\n")):
 			# TODO: put in try catch block here.
-			subprocess.Popen(gamelocation, cwd=self.config[SET][WF_KEY])
+			try:
+				subprocess.Popen(gamelocation, cwd=self.config[SET][WF_KEY])
+			except:
+				logging.warning("Unexpected error:", sys.exc_info()[0])
+				logging.warning(sys.exc_info()[1])
+				for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
+					logging.warning(line)
+				sys.exit()
+				
 		else:
 			logging.warning("Invalid directory location")
 app()
