@@ -1,1 +1,0 @@
-Place folders with the modified files in this directory.
