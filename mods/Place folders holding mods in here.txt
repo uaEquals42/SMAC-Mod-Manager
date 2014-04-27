@@ -1,0 +1,1 @@
+Place folders containing the changed files in this folder. example /mods/Your mod name/Changed Files
