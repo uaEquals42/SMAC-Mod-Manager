@@ -25,7 +25,7 @@ SET = "SETTINGS"
 EXCLUDED_FILES = [".tmp", ".dll", ".sys",".Ini"]
 EXCLUDED_FOLDERS = ["saves", "Color Blind Palette"]
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(filename="debug.txt",level=logging.DEBUG)
 class app():
 	def __init__(self):
 		logging.info("start program")
@@ -85,8 +85,8 @@ class app():
 		frame_leftrightbuttons.grid(column=3, row=1, padx=10)
 		button_left = ttk.Button(frame_leftrightbuttons, text='<', command=lambda: self.move_rightleft(self.tklist_active_mods,self.tklist_available_mods))
 		button_right = ttk.Button(frame_leftrightbuttons, text='>', command=lambda: self.move_rightleft(self.tklist_available_mods,self.tklist_active_mods))
-		button_up = ttk.Button(frame_leftrightbuttons, text='/\\', command=lambda: print("Up!"))
-		button_down = ttk.Button(frame_leftrightbuttons, text='\\/', command=lambda: print("Down!"))
+		button_up = ttk.Button(frame_leftrightbuttons, text='/\\', command=lambda: self.move_up())
+		button_down = ttk.Button(frame_leftrightbuttons, text='\\/', command=lambda: self.move_down())
 		button_left.grid(column=0, row=1)
 		button_right.grid(column=0, row=2)
 		button_up.grid(column=0, row=4)
@@ -258,6 +258,33 @@ class app():
 					
 		
 		return dict_files_to_copy	
+	
+	def move_up(self):
+		logging.debug("Move up")
+		listsize = self.tklist_active_mods.size()
+		if listsize > 1: # If it is less than one, we don't need to do anything.
+			location = self.tklist_active_mods.curselection()
+			logging.debug(location)
+			if location != ():
+				num = location[0]
+				if  num > 0: # if it is already on top, we don't need to move it up.
+					olditem = self.tklist_active_mods.get(num-1)
+					self.tklist_active_mods.delete(num-1)
+					self.tklist_active_mods.insert(num, olditem)
+	
+	def move_down(self):
+		logging.debug("Move down")
+		location = self.tklist_active_mods.curselection()
+		logging.debug(location)
+		if location != ():
+			num = location[0]
+			listsize = self.tklist_active_mods.size()
+			if num < listsize-1:	
+				#if  num > 0: # if it is already on top, we don't need to move it up.
+				currentitem = self.tklist_active_mods.get(num)
+				self.tklist_active_mods.delete(num)
+				self.tklist_active_mods.insert(num+1, currentitem)
+				self.tklist_active_mods.select_set(num+1)
 			
 	def start_game(self, gamelocation):
 		self.apply_mods(False)
@@ -269,13 +296,19 @@ class app():
 			# TODO: put in try catch block here.
 			try:
 				subprocess.Popen(gamelocation, cwd=self.config[SET][WF_KEY])
+			except OSError:
+				logging.warning(sys.exc_info()[1])
+				for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
+					logging.warning(line)
+				messagebox.showerror(message="Error: Exe is set to run as administrator.  \nChange it or select an exe that doesn't require elevated privileges", title='Error')
+
 			except:
 				logging.warning("Unexpected error:", sys.exc_info()[0])
 				logging.warning(sys.exc_info()[1])
 				for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
 					logging.warning(line)
-				sys.exit()
-				
+				messagebox.showerror(message="Unknown Error", title='Error')
+
 		else:
 			logging.warning("Invalid directory location")
 app()
