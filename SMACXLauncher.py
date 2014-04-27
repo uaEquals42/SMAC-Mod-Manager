@@ -170,7 +170,11 @@ class app():
 		self.save_settings()
 		
 	def get_list_of_mods(self):
-		return os.listdir("./mods/")
+		tmp = []
+		for ii in os.listdir("./mods/"):
+			if path.isdir("./mods/"+ii):
+				tmp.append(ii)
+		return tmp
 	
 	def save_settings(self):
 		logging.info("Saving settings")
