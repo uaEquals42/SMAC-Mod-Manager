@@ -39,7 +39,8 @@ SET = "SETTINGS"
 EXCLUDED_FILES = [".tmp", ".dll", ".sys",".Ini"]
 EXCLUDED_FOLDERS = ["saves", "Color Blind Palette"]
 
-logging.basicConfig(filename="debug.txt",level=logging.DEBUG)
+#logging.basicConfig(filename="debug.txt",level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 class app():
 	def __init__(self):
 		logging.info("start program")
@@ -259,8 +260,12 @@ class app():
 		for key, item in dict_files_to_copy.items():
 			destination = path.join(self.config[SET][WF_KEY], key)
 			
-			
-			if force or os.stat(item).st_mtime != os.stat(destination).st_mtime: # not perfect solution, but should be pretty good.
+			# Need to check to see if file exists at destination
+			if path.isfile(destination):
+				if force or os.stat(item).st_mtime != os.stat(destination).st_mtime: # not perfect solution, but should be pretty good.
+					logging.info(item + " to " + destination)
+					shutil.copy2(item, destination)
+			else: # If there is no file, copy anyway.
 				logging.info(item + " to " + destination)
 				shutil.copy2(item, destination)
 		elapsed_time = time.time() - start_time
