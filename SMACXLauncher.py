@@ -29,15 +29,17 @@ import shutil
 import time
 import sys
 import traceback
+import winreg
 
 
-TERRAN_KEY = "terran_Key"
-TERRANX_KEY = "terranX_Key"
+WINE = "WINE"
 WF_KEY = "working_folder"
 CONFIG = 'settings.ini'
 SET = "SETTINGS"
 EXCLUDED_FILES = [".tmp", ".dll", ".sys",".Ini"]
 EXCLUDED_FOLDERS = ["saves", "Color Blind Palette"]
+TERRAN = "terran.exe"
+TERRANX = "terranx.exe"
 
 #logging.basicConfig(filename="debug.txt",level=logging.DEBUG)
 logging.basicConfig(level=logging.DEBUG)
@@ -113,31 +115,17 @@ class app():
 		button_down.grid(column=0, row=5)
 		
 		#Options Tab
-		label_terran = ttk.Label(frameOptions, text='terran.exe:')
-		label_terranx= ttk.Label(frameOptions, text='terranx.exe:')
+		label_wine = ttk.Label(frameOptions, text='Wine prefix:')
+		
 		label_folder = ttk.Label(frameOptions, text='Alpha Centarui Folder:')
 		
-		self.str_terran = tk.StringVar()
-		self.str_terran.set(self.config[SET].get(TERRAN_KEY, " "))
-		entry_terran = ttk.Entry(frameOptions, textvariable=self.str_terran)
-		button_get_smac = ttk.Button(frameOptions, text='Find', command=lambda: self.set_terran(TERRAN_KEY, self.str_terran) )
-		
-		self.str_terranx = tk.StringVar()
-		self.str_terranx.set(self.config[SET].get(TERRANX_KEY, " "))
-		entry_terranx = ttk.Entry(frameOptions, textvariable=self.str_terranx)
-		button_get_smacx = ttk.Button(frameOptions, text='Find', command=lambda: self.set_terran(TERRANX_KEY,self.str_terranx))
-		
+	
 		
 		label_folder_location = ttk.Label(frameOptions, text=self.config[SET].get(WF_KEY, "Unknown"))
 		
 		button_get_folder = ttk.Button(frameOptions, text='Find', command=lambda: self.set_directory(label_folder_location))
 		
-		label_terran.grid(column=0, row=1)
-		entry_terran.grid(column=1, row=1,sticky="W,E",padx=10)
-		button_get_smac.grid(column=2, row=1)
-		label_terranx.grid(column=0, row=2)
-		entry_terranx.grid(column=1, row=2,sticky="W,E",padx=10)
-		button_get_smacx.grid(column=2, row=2)
+	
 		label_folder.grid(column=0, row=3)
 		label_folder_location.grid(column=1, row=3,sticky="W,E",padx=10)
 		button_get_folder.grid(column=2, row=3)
@@ -148,8 +136,8 @@ class app():
 		
 		button_force = ttk.Button(frameLaunchers, text='Force (slow)', command=lambda: self.apply_mods(True))
 		button_apply = ttk.Button(frameLaunchers, text='Apply', command=lambda: self.apply_mods(False))
-		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: self.start_game(self.str_terran.get()))
-		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: self.start_game(self.str_terranx.get()))
+		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: self.start_game(TERRAN))
+		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: self.start_game(TERRANX))
 		button_force.grid(column=0, row=0)
 		button_apply.grid(column=1, row=0)
 		label_launch.grid(column=2, row=0,pady=5)
@@ -165,17 +153,21 @@ class app():
 		#TODO: if there is already a directory set, or exe location set... default to their locations.
 		tmp = filedialog.askdirectory(initialdir=self.config[SET].get(WF_KEY, path.expanduser("~")))
 		if tmp != "":
-			self.config[SET][WF_KEY] = tmp
-			self.save_settings()
-			label.configure(text=self.config[SET][WF_KEY])
-		
-			#TODO: Popup asking to make backup folder.  Y/N
-			answer = messagebox.askyesno(message='Copy contents of \n'+tmp+'\n to \n' + path.abspath("./backup")+"\n\n\nIt is required to have an unaltered copy of SMAC/X in the backup folder",icon='question', title='Install')
+			# Then check to see if it contains the terran.exe in it.
+			if path.exists(path.join(tmp,TERRAN)):
+				self.config[SET][WF_KEY] = tmp
+				self.save_settings()
+				label.configure(text=self.config[SET][WF_KEY])
 			
-			if answer:
-				logging.info("Save to backupfolder")
-				self.make_backup_folder()
-				logging.info("Finished")
+				#TODO: Popup asking to make backup folder.  Y/N
+				answer = messagebox.askyesno(message='Copy contents of \n'+tmp+'\n to \n' + path.abspath("./backup")+"\n\n\nIt is required to have an unaltered copy of SMAC/X in the backup folder",icon='question', title='Install')
+				
+				if answer:
+					logging.info("Save to backupfolder")
+					self.make_backup_folder()
+					logging.info("Finished")
+			else:
+				messagebox.showerror(title="Executable not found.", message="Could not find terran.exe in folder")
 	
 	def move_rightleft(self, list_from, list_to):
 		activate = list_from.curselection()
@@ -185,11 +177,7 @@ class app():
 			list_from.selection_clear(modnum)
 			list_from.delete(modnum)
 		
-	def set_terran(self, key, string):
-		value = filedialog.askopenfilename()
-		self.config[SET][key]=value
-		string.set(value)	
-		self.save_settings()
+
 		
 	def get_list_of_mods(self):
 		tmp = []
@@ -200,9 +188,7 @@ class app():
 	
 	def save_settings(self):
 		logging.info("Saving settings")
-		self.config[SET][TERRAN_KEY] = self.str_terran.get()
-		self.config[SET][TERRANX_KEY] = self.str_terranx.get()
-		
+				
 		
 		with open(CONFIG, 'w') as configfile:
 			self.config.write(configfile)
@@ -270,6 +256,7 @@ class app():
 				shutil.copy2(item, destination)
 		elapsed_time = time.time() - start_time
 		logging.info("End copying. Time took " +str(elapsed_time))
+		return dict_files_to_copy
 	
 	def get_file_dict(self, directory, dict_files_to_copy):
 		for dirname, dirnames, files in os.walk(directory):
@@ -316,8 +303,8 @@ class app():
 				self.tklist_active_mods.insert(num+1, currentitem)
 				self.tklist_active_mods.select_set(num+1)
 			
-	def start_game(self, gamelocation):
-		self.apply_mods(False)
+	def start_game(self, gamekey):
+		dict_files_to_copy = self.apply_mods(False)
 		logging.info("start the game")
 		self.save_settings()	
 		# Check to see if folderlocation is valid.
@@ -325,13 +312,37 @@ class app():
 		if path.isdir(self.config[SET].get(WF_KEY, "\n\n\n\n\n\n\n\n\n\n\n")):
 			# TODO: put in try catch block here.
 			try:
-				subprocess.Popen(gamelocation, cwd=self.config[SET][WF_KEY])
+				if(sys.platform=='win32'):
+					subprocess.Popen(path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
+				if(sys.platform=='linux2'):
+					subprocess.Popen("wine " + path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
 			except OSError:
+				# ICK.  User is on windows an the executable is set to run as administrator.
 				logging.warning(sys.exc_info()[1])
 				for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
 					logging.warning(line)
-				messagebox.showerror(message="Error: Exe is set to run as administrator.  \nChange it or select an exe that doesn't require elevated privileges", title='Error')
-
+				
+				logging.info("Using workaround.")
+				# Use workaround.
+				game_location = dict_files_to_copy.get(gamekey)
+					
+				try:
+					subprocess.Popen(game_location, cwd=self.config[SET][WF_KEY])
+				except OSError:
+					logging.warning("OSError error:", sys.exc_info()[0])
+					logging.warning(sys.exc_info()[1])
+					for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
+						logging.warning(line)
+					messagebox.showerror(message="OSError: Exe is set to run as administrator.  Please uncheck the 'run as admin' in the exe properties.", title='OSError')
+				except:
+					logging.warning("Unexpected error:", sys.exc_info()[0])
+					logging.warning(sys.exc_info()[1])
+					for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
+						logging.warning(line)
+					messagebox.showerror(message="Unknown Error", title='Error')
+				else:
+					logging.info("No.")
+					
 			except:
 				logging.warning("Unexpected error:", sys.exc_info()[0])
 				logging.warning(sys.exc_info()[1])
