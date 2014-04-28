@@ -56,44 +56,49 @@ class app():
 		self.root.columnconfigure(0, weight=1)
 		self.root.rowconfigure(0, weight=1)
 		
+		# Create the tabs.
 		noteTabs = ttk.Notebook(self.root)
+		
 		frameMods = ttk.Frame(noteTabs); # first page, which would get widgets gridded into it
 		frameMods.columnconfigure(0, weight=1)
 		frameMods.columnconfigure(4, weight=1)
 		frameMods.rowconfigure(1, weight=1)
 		
-		
+		# Options tab
 		frameOptions = ttk.Frame(noteTabs) 
 		frameOptions.columnconfigure(1, weight=1)
+		# Display the tabs.
 		noteTabs.add(frameMods, text='Mods')
 		noteTabs.add(frameOptions, text='Options')
-		
 		noteTabs.grid(column=0, row=0, sticky="N, S, E, W")
 		
 		
 		
 		
+		# In-active mods list gui stuff.
 		label_in_mods = ttk.Label(frameMods, text='Inactive mods:')
-		label_in_mods.grid(column=0, row=0)
 		str_var_inactive_mods = tk.StringVar(value=tuple(self.get_list_of_mods())) #TODO: Have this load from memory
 		self.tklist_available_mods = tk.Listbox(frameMods, height=20, listvariable=str_var_inactive_mods)
-		self.tklist_available_mods.grid(column=0, row=1, sticky="N,W,E,S")
 		scroll_in_mods = ttk.Scrollbar(frameMods, orient="vertical", command=self.tklist_available_mods.yview)
-		scroll_in_mods.grid(column=1, row=1, sticky="N,S")
 		self.tklist_available_mods['yscrollcommand'] = scroll_in_mods.set
+		scroll_in_mods.grid(column=1, row=1, sticky="N,S")
+		self.tklist_available_mods.grid(column=0, row=1, sticky="N,W,E,S")
+		label_in_mods.grid(column=0, row=0)
 		
 		
-			
+		
+		# Active mods gui stuff.	
 		label_ac_mods = ttk.Label(frameMods, text='Active mods:')
-		label_ac_mods.grid(column=4, row=0)
-		self.str_var_active_mods = tk.StringVar(value=tuple([])) #TODO: Have this load from memory
-		self.tklist_active_mods = tk.Listbox(frameMods, height=20, listvariable=self.str_var_active_mods)
-		self.tklist_active_mods.grid(column=4, row=1, sticky="N,W,E,S")
+		str_var_active_mods = tk.StringVar(value=tuple([])) #TODO: Have this load from memory
+		self.tklist_active_mods = tk.Listbox(frameMods, height=20, listvariable=str_var_active_mods)
 		scroll_ac_mods = ttk.Scrollbar(frameMods, orient="vertical", command=self.tklist_active_mods.yview)
-		scroll_ac_mods.grid(column=5, row=1, sticky="N,S")
 		self.tklist_active_mods['yscrollcommand'] = scroll_ac_mods.set
+		label_ac_mods.grid(column=4, row=0)
+		scroll_ac_mods.grid(column=5, row=1, sticky="N,S")
+		self.tklist_active_mods.grid(column=4, row=1, sticky="N,W,E,S")
 		
 		
+		# Middle area, up down left right buttons.
 		frame_leftrightbuttons = ttk.Frame(frameMods)
 		frame_leftrightbuttons.rowconfigure(3,minsize=20)
 		frame_leftrightbuttons.grid(column=3, row=1, padx=10)
@@ -140,13 +145,15 @@ class app():
 		frameLaunchers = ttk.Frame(self.root)
 		label_launch = ttk.Label(frameLaunchers, text='Start:')
 		
+		button_force = ttk.Button(frameLaunchers, text='Force (slow)', command=lambda: self.apply_mods(True))
 		button_apply = ttk.Button(frameLaunchers, text='Apply', command=lambda: self.apply_mods(False))
 		button_SMAC = ttk.Button(frameLaunchers, text='Alpha Centauri', command=lambda: self.start_game(self.str_terran.get()))
 		button_SMACX = ttk.Button(frameLaunchers, text='Alien Crossfire', command=lambda: self.start_game(self.str_terranx.get()))
-		button_apply.grid(column=0, row=0)
-		label_launch.grid(column=1, row=0,pady=5)
-		button_SMAC.grid(column=2, row=0,padx=10)
-		button_SMACX.grid(column=3, row=0)
+		button_force.grid(column=0, row=0)
+		button_apply.grid(column=1, row=0)
+		label_launch.grid(column=2, row=0,pady=5)
+		button_SMAC.grid(column=3, row=0,padx=10)
+		button_SMACX.grid(column=4, row=0)
 		frameLaunchers.grid(column=0, row=1, sticky="S, E")
 		
 		# Start the window
