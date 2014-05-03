@@ -36,6 +36,7 @@ WINE = "WINE"
 WF_KEY = "working_folder"
 CONFIG = 'settings.ini'
 SET = "SETTINGS"
+SET2 = "ACTIVE_MODS"
 EXCLUDED_FILES = [".tmp", ".dll", ".sys",".Ini"]
 EXCLUDED_FOLDERS = ["saves", "Color Blind Palette"]
 TERRAN = "terran.exe"
@@ -48,7 +49,7 @@ class app():
 		logging.info("start program")
 		self.config = configparser.ConfigParser()
 		self.config[SET]={}
-
+		self.config[SET2]={}
 		self.config.read(CONFIG)
 
 		
@@ -80,7 +81,7 @@ class app():
 		
 		# In-active mods list gui stuff.
 		label_in_mods = ttk.Label(frameMods, text='Inactive mods:')
-		str_var_inactive_mods = tk.StringVar(value=tuple(self.get_list_of_mods())) #TODO: Have this load from memory
+		str_var_inactive_mods = tk.StringVar(value=self.get_tuple_of_inactivemods()) #TODO: Have this load from memory
 		self.tklist_available_mods = tk.Listbox(frameMods, height=20, listvariable=str_var_inactive_mods)
 		scroll_in_mods = ttk.Scrollbar(frameMods, orient="vertical", command=self.tklist_available_mods.yview)
 		self.tklist_available_mods['yscrollcommand'] = scroll_in_mods.set
@@ -90,9 +91,10 @@ class app():
 		
 		
 		
+		
 		# Active mods gui stuff.	
 		label_ac_mods = ttk.Label(frameMods, text='Active mods:')
-		str_var_active_mods = tk.StringVar(value=tuple([])) #TODO: Have this load from memory
+		str_var_active_mods = tk.StringVar(value=self.get_tuple_of_mods_used_last()) #TODO: Have this load from memory
 		self.tklist_active_mods = tk.Listbox(frameMods, height=20, listvariable=str_var_active_mods)
 		scroll_ac_mods = ttk.Scrollbar(frameMods, orient="vertical", command=self.tklist_active_mods.yview)
 		self.tklist_active_mods['yscrollcommand'] = scroll_ac_mods.set
@@ -177,7 +179,22 @@ class app():
 			list_from.selection_clear(modnum)
 			list_from.delete(modnum)
 		
+	def get_tuple_of_mods_used_last(self):
+		size = self.config[SET2]["Range"];
+		tp = []
+		modslist = self.get_list_of_mods()
+		for i in range(0, int(size)):
+			if self.config[SET2][str(i)] in modslist: #This is so that if the user uninstalls a mod we won't have problems.
+				tp.append(self.config[SET2][str(i)])
+		logging.info(tp)
+		return tuple(tp)
 
+	def get_tuple_of_inactivemods(self):
+		modslist = self.get_list_of_mods()
+		activemods = self.get_tuple_of_mods_used_last()
+		for ii in activemods:
+			modslist.remove(ii)
+		return tuple(modslist)
 		
 	def get_list_of_mods(self):
 		tmp = []
@@ -188,7 +205,10 @@ class app():
 	
 	def save_settings(self):
 		logging.info("Saving settings")
-				
+		self.config[SET2]={}
+		self.config[SET2]["Range"] = str(self.tklist_active_mods.size())
+		for i in range(0, self.tklist_active_mods.size()):
+			self.config[SET2][str(i)] = self.tklist_active_mods.get(i)
 		
 		with open(CONFIG, 'w') as configfile:
 			self.config.write(configfile)
@@ -224,7 +244,7 @@ class app():
 					
 
 	def apply_mods(self, force):
-		
+		self.save_settings()
 		dict_files_to_copy = {} # File relative path : File to copy path
 		dict_files_to_copy = self.get_file_dict("./backup", dict_files_to_copy)
 		# Get list of mods to apply
