@@ -117,8 +117,6 @@ class app():
 		button_down.grid(column=0, row=5)
 		
 		#Options Tab
-		label_wine = ttk.Label(frameOptions, text='Wine prefix:')
-		
 		label_folder = ttk.Label(frameOptions, text='Alpha Centarui Folder:')
 		
 	
@@ -180,7 +178,7 @@ class app():
 			list_from.delete(modnum)
 		
 	def get_tuple_of_mods_used_last(self):
-		size = self.config[SET2]["Range"];
+		size = self.config[SET2].get("RANGE",0)
 		tp = []
 		modslist = self.get_list_of_mods()
 		for i in range(0, int(size)):
@@ -245,38 +243,45 @@ class app():
 
 	def apply_mods(self, force):
 		self.save_settings()
-		dict_files_to_copy = {} # File relative path : File to copy path
-		dict_files_to_copy = self.get_file_dict("./backup", dict_files_to_copy)
-		# Get list of mods to apply
-		enabledmods = []
-		for i in range(0, self.tklist_active_mods.size()):
-			enabledmods.append(self.tklist_active_mods.get(i))
-		
-		logging.debug(enabledmods)
-		for ap_mods in enabledmods:	
-			dict_files_to_copy = self.get_file_dict(path.join("./mods", ap_mods), dict_files_to_copy)
-		
-	
-		# Then copy files back
-
-		logging.info("Start Copying")
-		start_time = time.time()
-		
-
-		for key, item in dict_files_to_copy.items():
-			destination = path.join(self.config[SET][WF_KEY], key)
+		try:
+				
+			dict_files_to_copy = {} # File relative path : File to copy path
+			dict_files_to_copy = self.get_file_dict("./backup", dict_files_to_copy)
+			# Get list of mods to apply
+			enabledmods = []
+			for i in range(0, self.tklist_active_mods.size()):
+				enabledmods.append(self.tklist_active_mods.get(i))
 			
-			# Need to check to see if file exists at destination
-			if path.isfile(destination):
-				if force or os.stat(item).st_mtime != os.stat(destination).st_mtime: # not perfect solution, but should be pretty good.
+			logging.debug(enabledmods)
+			for ap_mods in enabledmods:	
+				dict_files_to_copy = self.get_file_dict(path.join("./mods", ap_mods), dict_files_to_copy)
+			
+		
+			# Then copy files back
+	
+			logging.info("Start Copying")
+			start_time = time.time()
+			
+	
+			for key, item in dict_files_to_copy.items():
+				
+					
+				destination = path.join(self.config[SET][WF_KEY], key)
+				
+				# Need to check to see if file exists at destination
+				if path.isfile(destination):
+					if force or os.stat(item).st_mtime != os.stat(destination).st_mtime: # not perfect solution, but should be pretty good.
+						logging.info(item + " to " + destination)
+						shutil.copy2(item, destination)
+				else: # If there is no file, copy anyway.
 					logging.info(item + " to " + destination)
 					shutil.copy2(item, destination)
-			else: # If there is no file, copy anyway.
-				logging.info(item + " to " + destination)
-				shutil.copy2(item, destination)
-		elapsed_time = time.time() - start_time
-		logging.info("End copying. Time took " +str(elapsed_time))
-		return dict_files_to_copy
+			elapsed_time = time.time() - start_time
+			logging.info("End copying. Time took " +str(elapsed_time))
+			return dict_files_to_copy
+		except:
+			messagebox.showerror(message="Error. SMAC folder hasn't been set in options.", title='Option not set.')
+			return -1
 	
 	def get_file_dict(self, directory, dict_files_to_copy):
 		for dirname, dirnames, files in os.walk(directory):
@@ -326,51 +331,51 @@ class app():
 	def start_game(self, gamekey):
 		dict_files_to_copy = self.apply_mods(False)
 		logging.info("start the game")
-		self.save_settings()	
-		# Check to see if folderlocation is valid.
-		
-		if path.isdir(self.config[SET].get(WF_KEY, "\n\n\n\n\n\n\n\n\n\n\n")):
-			# TODO: put in try catch block here.
-			try:
-				if(sys.platform=='win32'):
-					subprocess.Popen(path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
-				if(sys.platform=='linux2'):
-					subprocess.Popen("wine " + path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
-			except OSError:
-				# ICK.  User is on windows an the executable is set to run as administrator.
-				logging.warning(sys.exc_info()[1])
-				for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
-					logging.warning(line)
-				
-				logging.info("Using workaround.")
-				# Use workaround.
-				game_location = dict_files_to_copy.get(gamekey)
-					
+		if self.save_settings()	!= -1:
+			# Check to see if folderlocation is valid.
+			
+			if path.isdir(self.config[SET].get(WF_KEY, "\n\n\n\n\n\n\n\n\n\n\n")):
+				# TODO: put in try catch block here.
 				try:
-					subprocess.Popen(game_location, cwd=self.config[SET][WF_KEY])
+					if(sys.platform=='win32'):
+						subprocess.Popen(path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
+					if(sys.platform=='linux2'):
+						subprocess.Popen("wine " + path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
 				except OSError:
-					logging.warning("OSError error:", sys.exc_info()[0])
+					# ICK.  User is on windows an the executable is set to run as administrator.
 					logging.warning(sys.exc_info()[1])
 					for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
 						logging.warning(line)
-					messagebox.showerror(message="OSError: Exe is set to run as administrator.  Please uncheck the 'run as admin' in the exe properties.", title='OSError')
+					
+					logging.info("Using workaround.")
+					# Use workaround.
+					game_location = dict_files_to_copy.get(gamekey)
+						
+					try:
+						subprocess.Popen(game_location, cwd=self.config[SET][WF_KEY])
+					except OSError:
+						logging.warning("OSError error:", sys.exc_info()[0])
+						logging.warning(sys.exc_info()[1])
+						for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
+							logging.warning(line)
+						messagebox.showerror(message="OSError: Exe is set to run as administrator.  Please uncheck the 'run as admin' in the exe properties.", title='OSError')
+					except:
+						logging.warning("Unexpected error:", sys.exc_info()[0])
+						logging.warning(sys.exc_info()[1])
+						for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
+							logging.warning(line)
+						messagebox.showerror(message="Unknown Error", title='Error')
+					else:
+						logging.info("No.")
+						
 				except:
 					logging.warning("Unexpected error:", sys.exc_info()[0])
 					logging.warning(sys.exc_info()[1])
 					for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
 						logging.warning(line)
 					messagebox.showerror(message="Unknown Error", title='Error')
-				else:
-					logging.info("No.")
-					
-			except:
-				logging.warning("Unexpected error:", sys.exc_info()[0])
-				logging.warning(sys.exc_info()[1])
-				for line in traceback.format_list(traceback.extract_tb(sys.exc_info()[2])):
-					logging.warning(line)
-				messagebox.showerror(message="Unknown Error", title='Error')
-
-		else:
-			logging.warning("Invalid directory location")
+	
+			else:
+				logging.warning("Invalid directory location")
 app()
 
