@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 Created on Apr 24, 2014
 Copyright (C) 2014 Gregory Jordan
@@ -29,15 +30,13 @@ import shutil
 import time
 import sys
 import traceback
-import winreg
 
-
-WINE = "WINE"
 WF_KEY = "working_folder"
 CONFIG = 'settings.ini'
 SET = "SETTINGS"
 SET2 = "ACTIVE_MODS"
-EXCLUDED_FILES = [".tmp", ".dll", ".sys",".Ini"]
+EXCLUDED_EXTENSIONS = [".tmp", ".sys"]
+EXCLUDED_FILES = ["Alpha Centauri.Ini"]
 EXCLUDED_FOLDERS = ["saves", "Color Blind Palette"]
 TERRAN = "terran.exe"
 TERRANX = "terranx.exe"
@@ -233,7 +232,7 @@ class app():
 					dirnames.remove(rem_f)
 			
 			for file in files:
-				if path.splitext(file)[1] not in EXCLUDED_FILES:
+				if path.splitext(file)[1] not in EXCLUDED_EXTENSIONS and path.basename(file) not in EXCLUDED_FILES:
 					file_path = path.join(dirname, file)
 					logging.debug(file_path)
 					destination = path.join("./backup", path.relpath(path.join(dirname, file), self.config[SET][WF_KEY]))
@@ -291,7 +290,7 @@ class app():
 					dirnames.remove(rem_f)
 			
 			for file in files:
-				if path.splitext(file)[1] not in EXCLUDED_FILES:
+				if path.splitext(file)[1] not in EXCLUDED_EXTENSIONS and path.basename(file) not in EXCLUDED_FILES:
 					file_path = path.join(dirname, file)
 					relative_path = path.relpath(path.join(dirname, file), directory)
 					dict_files_to_copy[relative_path] = file_path
@@ -339,7 +338,7 @@ class app():
 				try:
 					if(sys.platform=='win32'):
 						subprocess.Popen(path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
-					if(sys.platform=='linux2'):
+					if sys.platform.startswith('linux'):
 						subprocess.Popen("wine " + path.join(self.config[SET][WF_KEY],gamekey), cwd=self.config[SET][WF_KEY])
 				except OSError:
 					# ICK.  User is on windows an the executable is set to run as administrator.
